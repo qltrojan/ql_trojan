@@ -1,11 +1,12 @@
 /**
- * cron "0 7,17 * * *" YueCheng.js
- * export YueCheng="账号1&密码1 账号2&密码2"
+ * cron "0 9,19 * * *" YueCheng.js
+ * export YueCheng="账号1&密码1&支付宝姓名1&支付宝账号1 账号2&密码2&支付宝姓名2&支付宝账号2"
  * export OCR_SERVER="ocr服务"
  */
 const $ = new Env('今日越城')
 const YueCheng = ($.isNode() ? process.env.YueCheng : $.getdata("YueCheng")) || '';
 const OCR_SERVER = ($.isNode() ? process.env.OCR_SERVER : $.getdata("OCR_SERVER")) || 'https://ddddocr.xzxxn7.live';
+window = {};
 let Utils = undefined;
 let signature_key = ''
 let notice = ''
@@ -16,12 +17,17 @@ let clientId = '48'
 let signatureSalt = "FR*r!isE5W"
 let phone_number = ''
 let password = ''
+let realname = ''
+let aliPay = ''
 let ua = ''
 let commonUa = ''
 let deviceId = ''
 let jinhuaAppId = 'K8tbWP2J0x3uCITGYEhL'
 let jinhuaKey = '35c782a2'
 let jinhuaToken = ''
+let activityCookie = ''
+let activityId = ''
+let consumerId = ''
 !(async () => {
     await main();
 })().catch((e) => {$.log(e)}).finally(() => {$.done({});});
@@ -45,6 +51,8 @@ async function main() {
         console.log(commonUa)
         phone_number = item.split("&")[0]
         password = item.split("&")[1]
+        realname = item.split("&")[2]
+        aliPay = item.split("&")[3] || phone_number
         console.log(`用户：${phone_number}开始任务`)
         console.log("获取sessionId")
         let initSession = await commonPost('/api/account/init');
@@ -136,76 +144,165 @@ async function main() {
                     lottery = await jinhuaPost(`/api/lotterybigwheel/_ac_lottery`,{"id":lotteryId,"app_id":jinhuaAppId,"module":"study","optionHash":""})
                     if (lottery.data.code) {
                         console.log(`抽奖获得：${lottery.data.title}`)
+                        notice += `用户：${phone_number} 抽奖获得：${lottery.data.title}\n`
                     } else {
                         console.log(`抽奖获得：${lottery.data.tip_title}`)
+                        notice += `用户：${phone_number} 抽奖获得：${lottery.data.tip_title}\n`
                     }
                 }
             } else {
                 if (lottery.data.code) {
                     console.log(`抽奖获得：${lottery.data.title}`)
+                    notice += `用户：${phone_number} 抽奖获得：${lottery.data.title}\n`
                 } else {
                     console.log(`抽奖获得：${lottery.data.tip_title}`)
+                    notice += `用户：${phone_number} 抽奖获得：${lottery.data.tip_title}\n`
                 }
             }
         }
         console.log("————————————")
-        console.log("开始任务")
-        let readFinish = true;
-        let likeFinish = true;
-        let shareFinish = true;
-        let taskList = await commonGet('/api/user_center/task?type=1&current=1&size=20')
-        for (let task of taskList.data.list) {
-            console.log(`任务：${task.name}`)
-            if (task.completed == 1) {
-                console.log(`任务已完成`)
-                continue;
-            }
-            console.log(`任务进度：${task.finish_times}/${task.frequency}`)
-            if (task.name == '新闻资讯阅读') {
-                readFinish = false;
-            }
-            if (task.name == '新闻资讯点赞') {
-                likeFinish = false;
-            }
-            if (task.name == '分享资讯给好友') {
-                shareFinish = false;
-            }
+        console.log('动动手指赢红包')
+        url = articleList.data.article_list[2].column_news_list[1].url;
+        urlStr = url.split('?')[1];
+        result = {};
+        paramsArr = urlStr.split('&')
+        for(let i = 0,len = paramsArr.length;i < len;i++){
+            let arr = paramsArr[i].split('=')
+            result[arr[0]] = arr[1];
         }
-        if (!readFinish || !likeFinish || !shareFinish) {
-            let articleList = await commonGet('/api/article/channel_list?channel_id=5dbf7fdfb1985007455762fd&isDiFangHao=false&is_new=true&list_count=0&size=20')
-            for (const article of articleList.data.article_list) {
-                let articleId = article.id;
-                if (!readFinish) {
-                    let read = await commonGet(`/api/article/read_time?channel_article_id=${articleId}&is_end=true&read_time=3051`)
-                    if (read.data.score_notify) {
-                        console.log(`阅读获得：${read.data?.score_notify?.integral}积分`)
-                    } else {
-                        console.log(`文章已经阅读过了`)
-                    }
-                }
-                if (!likeFinish) {
-                    let like = await commonPost(`/api/favorite/like`,`action=true&id=${articleId}`)
-                    if (like.data) {
-                        console.log(`点赞获得：${like.data?.score_notify?.integral}积分`)
-                    } else {
-                        console.log(`文章已经点赞过了`)
-                    }
-                }
-                if (!shareFinish) {
-                    let share = await commonPost(`/api/user_mumber/doTask`,`memberType=3&member_type=3&target_id==${articleId}`)
-                    if (share.data.score_notify) {
-                        console.log(`分享获得：${share.data?.score_notify?.integral}积分`)
-                    } else {
-                        console.log(`文章已经分享过了`)
-                    }
-                }
+        let getDetail = await commonGet(`/api/article/detail?id=${result.id}`)
+        let newsList = await commonGet(`/api/article/subject_group_list?group_id=${getDetail.data.article.subject_groups[0].group_id}`)
+        for (const news of newsList.data.article_list) {
+            if (!isToday(news.published_at)) {
+                break
             }
+            console.log(`文章：${news.list_title}`)
+            let detail = await commonGet(`/api/article/detail?id=${news.id}`)
+            let content = detail.data.article.content;
+            const match = content.match(/id%3D(\d+)%26dbnewopen/);
+            if (match) {
+                activityId = match[1];
+                console.log(`activityId：${activityId}`)
+            } else {
+                console.log("未匹配到activityId");
+                continue
+            }
+            console.log("阅读登录")
+            let activityLogin = await activityGet(`/customActivity/zjtm/autoLogin?_=${Date.now()}&sessionId=${sessionId}&accountId=${accountId}&redirectUrl=https://95337.activity-42.m.duiba.com.cn/hdtool/index?id=${activityId}&dbnewopen`)
+            let location = activityLogin.data;
+            activityCookie = ''
+            activityCookie = await activityCookieGet(location);
+            console.log("获取抽奖key")
+            let key = await keyGet(`https://95337.activity-42.m.duiba.com.cn/hdtool/index?id=${activityId}&dbnewopen&from=login&spm=95337.1.1.1`)
+            let getTokenNew = await activityPost(`/hdtool/ctoken/getTokenNew`,`timestamp=${Date.now()}&activityId=${activityId}&activityType=hdtool&consumerId=${consumerId}`)
+            eval(getTokenNew.token);
+            let token = window[key];
+            let lottery = await activityPost(`/hdtool/dy/doJoin?dpm=95337.3.1.0&activityId=${activityId}&_=${Date.now()}`,`actId=${activityId}&oaId=${activityId}&activityType=hdtool&consumerId=${consumerId}&token=${token}`)
+            if (lottery.success) {
+                if (!lottery.orderId) {
+                    console.log(lottery.message)
+                    continue
+                }
+                let orderId = lottery.orderId;
+                let result = 0;
+                while (result == 0) {
+                    let getOrderStatus = await activityPost(`/hdtool/getOrderStatus?_=${Date.now()}`,`orderId=${orderId}&adslotId=`)
+                    result = getOrderStatus.result;
+                    if (result == 0) {
+                        console.log(getOrderStatus.message)
+                    } else {
+                        if (getOrderStatus.lottery.type == 'thanks') {
+                            console.log(`谢谢参与`)
+                        }
+                        if (getOrderStatus.lottery.type == 'alipay') {
+                            console.log(`抽奖获得支付宝红包：${getOrderStatus.lottery.title}`)
+                            notice += `用户：${phone_number} 抽奖获得支付宝红包：${getOrderStatus.lottery.title}\n`
+                            let url = getOrderStatus.lottery.link;
+                            let urlStr = url.split('?')[1];
+                            let result = {};
+                            let paramsArr = urlStr.split('&')
+                            for(let i = 0,len = paramsArr.length;i < len;i++){
+                                let arr = paramsArr[i].split('=')
+                                result[arr[0]] = arr[1];
+                            }
+                            let recordId = result.recordId;
+                            if (realname && aliPay) {
+                                console.log("获取兑换key")
+                                key = await keyGet(`https://95337.activity-42.m.duiba.com.cn/activity/takePrizeNew?recordId=${recordId}&dbnewopen`)
+                                let getToken = await activityPost(`/ctoken/getToken.do`)
+                                eval(getToken.token);
+                                let token = window[key];
+                                let award = await activityPost(`/activity/doTakePrize`,`alipay=${aliPay}&realname=${encodeURI(realname)}&recordId=${recordId}&token=${token}`)
+                                console.log(award.message)
+                            } else {
+                                console.log(`请设置支付宝姓名和账号`)
+                            }
+                        }
+                    }
+                }
+            } else {
+                console.log(lottery.message)
+            }
+            await $.wait(2000)
         }
-        console.log("————————————")
-        console.log("查询积分")
-        let detail = await commonGet('/api/user_mumber/account_detail')
-        console.log(`拥有积分：${detail.data.rst.total_integral}\n`)
-        notice += `用户：${phone_number} 积分：${detail.data.rst.total_integral}\n`
+        // console.log("————————————")
+        // console.log("开始任务")
+        // let readFinish = true;
+        // let likeFinish = true;
+        // let shareFinish = true;
+        // let taskList = await commonGet('/api/user_center/task?type=1&current=1&size=20')
+        // for (let task of taskList.data.list) {
+        //     console.log(`任务：${task.name}`)
+        //     if (task.completed == 1) {
+        //         console.log(`任务已完成`)
+        //         continue;
+        //     }
+        //     console.log(`任务进度：${task.finish_times}/${task.frequency}`)
+        //     if (task.name == '新闻资讯阅读') {
+        //         readFinish = false;
+        //     }
+        //     if (task.name == '新闻资讯点赞') {
+        //         likeFinish = false;
+        //     }
+        //     if (task.name == '分享资讯给好友') {
+        //         shareFinish = false;
+        //     }
+        // }
+        // if (!readFinish || !likeFinish || !shareFinish) {
+        //     let articleList = await commonGet('/api/article/channel_list?channel_id=5dbf7fdfb1985007455762fd&isDiFangHao=false&is_new=true&list_count=0&size=20')
+        //     for (const article of articleList.data.article_list) {
+        //         let articleId = article.id;
+        //         if (!readFinish) {
+        //             let read = await commonGet(`/api/article/read_time?channel_article_id=${articleId}&is_end=true&read_time=3051`)
+        //             if (read.data.score_notify) {
+        //                 console.log(`阅读获得：${read.data?.score_notify?.integral}积分`)
+        //             } else {
+        //                 console.log(`文章已经阅读过了`)
+        //             }
+        //         }
+        //         if (!likeFinish) {
+        //             let like = await commonPost(`/api/favorite/like`,`action=true&id=${articleId}`)
+        //             if (like.data) {
+        //                 console.log(`点赞获得：${like.data?.score_notify?.integral}积分`)
+        //             } else {
+        //                 console.log(`文章已经点赞过了`)
+        //             }
+        //         }
+        //         if (!shareFinish) {
+        //             let share = await commonPost(`/api/user_mumber/doTask`,`memberType=3&member_type=3&target_id==${articleId}`)
+        //             if (share.data.score_notify) {
+        //                 console.log(`分享获得：${share.data?.score_notify?.integral}积分`)
+        //             } else {
+        //                 console.log(`文章已经分享过了`)
+        //             }
+        //         }
+        //     }
+        // }
+        // console.log("————————————")
+        // console.log("查询积分")
+        // let detail = await commonGet('/api/user_mumber/account_detail')
+        // console.log(`拥有积分：${detail.data.rst.total_integral}\n`)
+        // notice += `用户：${phone_number} 积分：${detail.data.rst.total_integral}\n`
     }
     if (notice) {
         await sendMsg(notice);
@@ -441,6 +538,170 @@ async function jinhuaGet(url,body) {
     })
 }
 
+async function activityGet(url) {
+    return new Promise(resolve => {
+        const options = {
+            url: `https://95337.activity-42.m.duiba.com.cn${url}`,
+            headers : {
+                'accept': '*/*',
+                'user-agent': 'Mozilla/5.0 (Linux; Android 11; 21091116AC Build/RP1A.200720.011; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/94.0.4606.85 Mobile Safari/537.36;xsb_yuecheng;xsb_yuecheng;1.7.0;native_app;6.12.0',
+                'x-requested-with': 'com.zjonline.yuecheng',
+                'sec-fetch-site': 'same-origin',
+                'sec-fetch-mode': 'cors',
+                'sec-fetch-dest': 'empty',
+                'accept-encoding': 'gzip, deflate',
+                'accept-language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
+            }
+        }
+        $.get(options, async (err, resp, data) => {
+            try {
+                if (err) {
+                    console.log(`${JSON.stringify(err)}`)
+                    console.log(`${$.name} API请求失败，请检查网路重试`)
+                } else {
+                    await $.wait(2000)
+                    resolve(JSON.parse(data));
+                }
+            } catch (e) {
+                $.logErr(e, resp)
+            } finally {
+                resolve();
+            }
+        })
+    })
+}
+
+async function activityPost(url,body) {
+    return new Promise(resolve => {
+        const options = {
+            url: `https://95337.activity-42.m.duiba.com.cn${url}`,
+            headers : {
+                'accept': 'application/json',
+                'user-agent': 'Mozilla/5.0 (Linux; Android 11; 21091116AC Build/RP1A.200720.011; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/94.0.4606.85 Mobile Safari/537.36;xsb_yuecheng;xsb_yuecheng;1.7.0;native_app;6.12.0',
+                'x-requested-with': 'XMLHttpRequest',
+                'content-type': 'application/x-www-form-urlencoded',
+                'origin': 'https://95337.activity-42.m.duiba.com.cn',
+                'cookie': activityCookie,
+                'sec-fetch-site': 'same-origin',
+                'sec-fetch-mode': 'cors',
+                'sec-fetch-dest': 'empty',
+                'referer': `https://95337.activity-42.m.duiba.com.cn/hdtool/index?id=${activityId}&dbnewopen&from=login&spm=95337.1.1.1`,
+                'accept-encoding': 'gzip, deflate',
+                'accept-language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
+            },
+            body: body
+        }
+        $.post(options, async (err, resp, data) => {
+            try {
+                if (err) {
+                    console.log(`${JSON.stringify(err)}`)
+                    console.log(`${$.name} API请求失败，请检查网路重试`)
+                } else {
+                    await $.wait(2000)
+                    resolve(JSON.parse(data));
+                }
+            } catch (e) {
+                $.logErr(e, resp)
+            } finally {
+                resolve();
+            }
+        })
+    })
+}
+
+async function activityCookieGet(url) {
+    return new Promise(resolve => {
+        const options = {
+            url: `https:${url}`,
+            headers : {
+                'accept': '*/*',
+                'user-agent': 'Mozilla/5.0 (Linux; Android 11; 21091116AC Build/RP1A.200720.011; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/94.0.4606.85 Mobile Safari/537.36;xsb_yuecheng;xsb_yuecheng;1.7.0;native_app;6.12.0',
+                'x-requested-with': 'com.zjonline.yuecheng',
+                'sec-fetch-site': 'same-origin',
+                'sec-fetch-mode': 'cors',
+                'sec-fetch-dest': 'empty',
+                'accept-encoding': 'gzip, deflate',
+                'accept-language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
+            },
+            followRedirect: false
+        }
+        $.get(options, async (err, resp, data) => {
+            try {
+                if (err) {
+                    console.log(`${JSON.stringify(err)}`)
+                    console.log(`${$.name} API请求失败，请检查网路重试`)
+                } else {
+                    await $.wait(2000)
+                    if ($.isNode()) {
+                        let cookieArr = resp.headers['set-cookie'] || resp.headers['Set-Cookie'];
+                        for (let i = 0; i < cookieArr.length; i++) {
+                            activityCookie += cookieArr[i].split(';')[0] + ';'
+                        }
+                    } else {
+                        activityCookie = resp.headers['set-cookie'] || resp.headers['Set-Cookie'];
+                        activityCookie = formatCookies(activityCookie);
+                    }
+                    resolve(activityCookie);
+                }
+            } catch (e) {
+                $.logErr(e, resp)
+            } finally {
+                resolve();
+            }
+        })
+    })
+}
+
+async function keyGet(url) {
+    return new Promise(resolve => {
+        const options = {
+            url: url,
+            headers: {
+                'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+                'upgrade-insecure-requests': '1',
+                'user-agent': 'Mozilla/5.0 (Linux; Android 11; 21091116AC Build/RP1A.200720.011; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/94.0.4606.85 Mobile Safari/537.36;xsb_yuecheng;xsb_yuecheng;1.7.0;native_app;6.12.0',
+                'x-requested-with': 'com.zjonline.yuecheng',
+                'sec-fetch-site': 'same-origin',
+                'sec-fetch-mode': 'navigate',
+                'sec-fetch-user': '?1',
+                'sec-fetch-dest': 'document',
+                'referer': 'https://95337.activity-42.m.duiba.com.cn/',
+                'accept-encoding': 'gzip, deflate',
+                'accept-language': 'zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7',
+                'cookie': activityCookie
+            }
+        }
+        $.get(options, async (err, resp, data) => {
+            try {
+                if (err) {
+                    console.log(`${JSON.stringify(err)}`)
+                    console.log(`${$.name} API请求失败，请检查网路重试`)
+                } else {
+                    await $.wait(2000)
+                    let code = /<script type\b[^>]*>\s*var([\s\S]*?)<\/script>/.exec(data)[1];
+                    eval(code)
+                    let key = /var\s+key\s+=\s+'([^']+)';/.exec(getDuibaToken.toString())[1];
+                    console.log(key)
+                    console.log('获取consumerId')
+                    const regex = /consumerId:'(\d+)'/;
+                    const match = data.match(regex);
+                    if (match) {
+                        consumerId = match[1];
+                    } else {
+                        consumerId = '4135312778'
+                    }
+                    console.log(consumerId)
+                    resolve(key);
+                }
+            } catch (e) {
+                $.logErr(e, resp)
+            } finally {
+                resolve();
+            }
+        })
+    })
+}
+
 async function slidePost(body) {
     return new Promise(resolve => {
         const options = {
@@ -465,6 +726,15 @@ async function slidePost(body) {
             }
         })
     })
+}
+
+function formatCookies(cookieString) {
+    const cookies = cookieString.split(', ');
+    const formattedCookies = cookies.map(cookie => {
+        const keyValue = cookie.split(';')[0];
+        return keyValue.trim();
+    });
+    return formattedCookies.join(';');
 }
 
 function aesEncrypt(e, r) {
@@ -580,6 +850,15 @@ function generateRandomUA() {
     return {"ua": ua, "commonUa": commonUa,"uuid":uuid};
 }
 
+function isToday(dateString) {
+    const inputDate = new Date(dateString);
+    const today = new Date();
+
+    return inputDate.getFullYear() === today.getFullYear() &&
+        inputDate.getMonth() === today.getMonth() &&
+        inputDate.getDate() === today.getDate();
+}
+
 async function loadUtils() {
     let code = $.getdata('Utils_Code') || '';
     if (code && Object.keys(code).length) {
@@ -590,7 +869,7 @@ async function loadUtils() {
     console.log(`🚀 ${$.name}: 开始下载Utils代码`)
     return new Promise(async (resolve) => {
         $.getScript(
-            'https://cdn.jsdelivr.net/gh/xzxxn777/Surge@main/Utils/Utils.js'
+            'https://mirror.ghproxy.com/https://raw.githubusercontent.com/xzxxn777/Surge/main/Utils/Utils.js'
         ).then((fn) => {
             $.setdata(fn, "Utils_Code")
             eval(fn)
