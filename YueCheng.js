@@ -318,7 +318,7 @@ async function initGet(url) {
                 'Cache-Control': 'no-cache',
                 'X-REQUEST-ID': generateUUID(),
                 'Accept-Encoding': 'gzip',
-                'user-agent': ua,
+                'user-agent': 'ANDROID;10;48;1.7.0;1.0;null;YAL-AL00',
             }
         }
         $.get(options, async (err, resp, data) => {
@@ -350,7 +350,7 @@ async function passportPost(url) {
                 'Cache-Control': 'no-cache',
                 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
                 'Accept-Encoding': 'gzip',
-                'user-agent': ua,
+                'user-agent': 'ANDROID;10;48;1.7.0;1.0;null;YAL-AL00',
             },
             body: params.body
         }
@@ -386,7 +386,7 @@ async function commonGet(url) {
                 'X-ACCOUNT-ID': accountId,
                 'Cache-Control': 'no-cache',
                 'Accept-Encoding': 'gzip',
-                'user-agent': commonUa,
+                'user-agent': '1.7.0;00000000-62c9-bb85-ffff-ffffc643288d;HUAWEI YAL-AL00;Android;10;huawei;6.12.0',
             }
         }
         $.get(options, async (err, resp, data) => {
@@ -422,7 +422,7 @@ async function commonPost(url,body) {
                 'X-ACCOUNT-ID': accountId,
                 'Cache-Control': 'no-cache',
                 'Accept-Encoding': 'gzip',
-                'user-agent': commonUa,
+                'user-agent': '1.7.0;00000000-62c9-bb85-ffff-ffffc643288d;HUAWEI YAL-AL00;Android;10;huawei;6.12.0',
             },
             body: body
         }
@@ -461,7 +461,7 @@ async function jinhuaPost(url,body) {
                 'access-timestamp': params.time,
                 'access-api-token': sessionId,
                 'accept': 'application/json, text/plain, */*',
-                'user-agent': 'Mozilla/5.0 (Linux; Android 11; 21091116AC Build/RP1A.200720.011; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/94.0.4606.85 Mobile Safari/537.36;xsb_yuecheng;xsb_yuecheng;1.7.0;native_app;6.12.0',
+                'user-agent': 'Mozilla/5.0 (Linux; Android 10; YAL-AL00 Build/HUAWEIYAL-AL00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/99.0.4844.88 Mobile Safari/537.36;xsb_yuecheng;xsb_yuecheng;1.7.0;native_app;6.12.0',
                 'content-type': 'application/json; charset=UTF-8',
                 'origin': 'https://op-h5.cloud.jinhua.com.cn',
                 'x-requested-with': 'com.zjonline.zhuji',
@@ -509,7 +509,7 @@ async function jinhuaGet(url,body) {
                 'access-timestamp': params.time,
                 'access-api-token': sessionId,
                 'accept': 'application/json, text/plain, */*',
-                'user-agent': 'Mozilla/5.0 (Linux; Android 11; 21091116AC Build/RP1A.200720.011; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/94.0.4606.85 Mobile Safari/537.36;xsb_yuecheng;xsb_yuecheng;1.7.0;native_app;6.12.0',
+                'user-agent': 'Mozilla/5.0 (Linux; Android 10; YAL-AL00 Build/HUAWEIYAL-AL00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/99.0.4844.88 Mobile Safari/537.36;xsb_yuecheng;xsb_yuecheng;1.7.0;native_app;6.12.0',
                 'origin': 'https://op-h5.cloud.jinhua.com.cn',
                 'x-requested-with': 'com.zjonline.zhuji',
                 'sec-fetch-site': 'same-site',
@@ -544,7 +544,7 @@ async function activityGet(url) {
             url: `https://95337.activity-42.m.duiba.com.cn${url}`,
             headers : {
                 'accept': '*/*',
-                'user-agent': 'Mozilla/5.0 (Linux; Android 11; 21091116AC Build/RP1A.200720.011; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/94.0.4606.85 Mobile Safari/537.36;xsb_yuecheng;xsb_yuecheng;1.7.0;native_app;6.12.0',
+                'user-agent': 'Mozilla/5.0 (Linux; Android 10; YAL-AL00 Build/HUAWEIYAL-AL00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/99.0.4844.88 Mobile Safari/537.36;xsb_yuecheng;xsb_yuecheng;1.7.0;native_app;6.12.0',
                 'x-requested-with': 'com.zjonline.yuecheng',
                 'sec-fetch-site': 'same-origin',
                 'sec-fetch-mode': 'cors',
@@ -577,7 +577,7 @@ async function activityPost(url,body) {
             url: `https://95337.activity-42.m.duiba.com.cn${url}`,
             headers : {
                 'accept': 'application/json',
-                'user-agent': 'Mozilla/5.0 (Linux; Android 11; 21091116AC Build/RP1A.200720.011; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/94.0.4606.85 Mobile Safari/537.36;xsb_yuecheng;xsb_yuecheng;1.7.0;native_app;6.12.0',
+                'user-agent': 'Mozilla/5.0 (Linux; Android 10; YAL-AL00 Build/HUAWEIYAL-AL00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/99.0.4844.88 Mobile Safari/537.36;xsb_yuecheng;xsb_yuecheng;1.7.0;native_app;6.12.0',
                 'x-requested-with': 'XMLHttpRequest',
                 'content-type': 'application/x-www-form-urlencoded',
                 'origin': 'https://95337.activity-42.m.duiba.com.cn',
@@ -615,7 +615,7 @@ async function activityCookieGet(url) {
             url: `https:${url}`,
             headers : {
                 'accept': '*/*',
-                'user-agent': 'Mozilla/5.0 (Linux; Android 11; 21091116AC Build/RP1A.200720.011; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/94.0.4606.85 Mobile Safari/537.36;xsb_yuecheng;xsb_yuecheng;1.7.0;native_app;6.12.0',
+                'user-agent': 'Mozilla/5.0 (Linux; Android 10; YAL-AL00 Build/HUAWEIYAL-AL00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/99.0.4844.88 Mobile Safari/537.36;xsb_yuecheng;xsb_yuecheng;1.7.0;native_app;6.12.0',
                 'x-requested-with': 'com.zjonline.yuecheng',
                 'sec-fetch-site': 'same-origin',
                 'sec-fetch-mode': 'cors',
@@ -659,7 +659,7 @@ async function keyGet(url) {
             headers: {
                 'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
                 'upgrade-insecure-requests': '1',
-                'user-agent': 'Mozilla/5.0 (Linux; Android 11; 21091116AC Build/RP1A.200720.011; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/94.0.4606.85 Mobile Safari/537.36;xsb_yuecheng;xsb_yuecheng;1.7.0;native_app;6.12.0',
+                'user-agent': 'Mozilla/5.0 (Linux; Android 10; YAL-AL00 Build/HUAWEIYAL-AL00; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/99.0.4844.88 Mobile Safari/537.36;xsb_yuecheng;xsb_yuecheng;1.7.0;native_app;6.12.0',
                 'x-requested-with': 'com.zjonline.yuecheng',
                 'sec-fetch-site': 'same-origin',
                 'sec-fetch-mode': 'navigate',
